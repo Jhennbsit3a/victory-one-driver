@@ -4,33 +4,21 @@
       <v-col cols="12" sm="10" md="6" lg="4">
         <v-card class="sign-in-card">
           <v-card-text class="text-center mt-4">
-            <h2>Sign In</h2>
+            <h2>Driver Sign In</h2>
           </v-card-text>
 
           <v-card-text>
             <v-form ref="form" v-model="valid" lazy-validation>
               <!-- Email Input -->
-              <v-text-field 
-                v-model="email" 
-                :rules="emailRules" 
-                label="Email" 
-                required 
-                class="input-field mt-2"
-              >
+              <v-text-field v-model="email" :rules="emailRules" label="Email" required class="input-field mt-2">
                 <template v-slot:prepend>
                   <v-icon>mdi-email</v-icon>
                 </template>
               </v-text-field>
 
               <!-- Password Input -->
-              <v-text-field 
-                v-model="password" 
-                :rules="passwordRules" 
-                label="Password" 
-                :type="showPassword ? 'text' : 'password'" 
-                required 
-                class="input-field mt-2"
-              >
+              <v-text-field v-model="password" :rules="passwordRules" label="Password"
+                :type="showPassword ? 'text' : 'password'" required class="input-field mt-2">
                 <template v-slot:prepend>
                   <v-icon>mdi-lock</v-icon>
                 </template>
@@ -42,12 +30,7 @@
               </v-text-field>
 
               <!-- Sign In Button -->
-              <v-btn 
-                @click="signIn" 
-                :disabled="loading" 
-                class="primary-btn full-width" 
-                block
-              >
+              <v-btn @click="signIn" :disabled="loading" class="primary-btn full-width" color="orange" block>
                 <v-icon v-if="loading" left>mdi-loading</v-icon>
                 <span v-if="!loading">Sign In</span>
                 <span v-else>Signing In...</span>
@@ -55,7 +38,7 @@
             </v-form>
           </v-card-text>
 
-          <div class="text-center mt-1">
+          <!-- <div class="text-center mt-1">
             <v-btn 
               text 
               @click="forgotPasswordDialog = true" 
@@ -63,7 +46,7 @@
             >
               Forgot Password?
             </v-btn>
-          </div>
+          </div> -->
         </v-card>
       </v-col>
     </v-row>
@@ -74,12 +57,7 @@
         <v-card-title class="headline">Reset Password</v-card-title>
         <v-card-text>
           <p>Please enter your email address to reset your password:</p>
-          <v-text-field 
-            v-model="resetEmail" 
-            :rules="emailRules" 
-            label="Email" 
-            required
-          >
+          <v-text-field v-model="resetEmail" :rules="emailRules" label="Email" required>
             <template v-slot:prepend>
               <v-icon>mdi-email</v-icon>
             </template>
@@ -87,11 +65,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn 
-            color="orange darken-2" 
-            dark 
-            @click="sendResetEmail"
-          >
+          <v-btn color="orange darken-2" dark @click="sendResetEmail">
             Send
           </v-btn>
           <v-btn text @click="forgotPasswordDialog = false">Cancel</v-btn>
@@ -104,7 +78,7 @@
 <script>
 import { auth, firestore } from '~/plugins/firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
 
 export default {
   data() {
@@ -122,37 +96,43 @@ export default {
   },
   methods: {
     async signIn() {
-  if (this.$refs.form.validate()) {
-    this.loading = true;
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
-      const userId = userCredential.user.uid;
+      if (this.$refs.form.validate()) {
+        this.loading = true;
+        try {
+          // Query Firestore for a user with the provided email and password
+          const usersQuery = query(
+            collection(firestore, "Users"),
+            where("email", "==", this.email),
+            where("password", "==", this.password)
+          );
+          const usersSnapshot = await getDocs(usersQuery);
 
-      // Fetch user role from Firestore
-      const userDocRef = doc(firestore, 'Users', userId);
-      const userDoc = await getDoc(userDocRef);
+          if (!usersSnapshot.empty) {
+            // Assuming only one user matches the email and password
+            const userDoc = usersSnapshot.docs[0];
+            const userData = userDoc.data();
+            // console.log(userData);
 
-      if (userDoc.exists()) {
-        const userRole = userDoc.data().role;
-        if (['admin', 'cashier', 'owner', 'dispatcher'].includes(userRole)) {
-          console.log(`Role "${userRole}" is validated. Access granted.`);
-          this.$router.push('/admin/dashboard');
-        } else {
-          console.log(`Role "${userRole}" is not authorized. Redirecting to no-access page.`);
-          this.$router.push('/no-access');
+            const userRole = userData.role;
+            if (["admin", "owner", "driver"].includes(userRole)) {
+              // console.log(`Role "${userRole}" is validated. Access granted.`);
+              this.$router.push("/driver/pending_orders");
+            } else {
+              // console.log(`Role "${userRole}" is not authorized. Redirecting to no-access page.`);
+              this.$router.push("/no-access");
+            }
+          } else {
+            console.error("Invalid email or password");
+            alert("Invalid email or password. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error during sign-in:", error);
+          alert("Sign-in failed: " + error.message);
+        } finally {
+          this.loading = false;
         }
-      } else {
-        console.error('User role not found in Firestore');
-        alert('Unable to retrieve user role. Please contact support.');
       }
-    } catch (error) {
-      console.error('Error signing in:', error);
-      alert('Sign-in failed: ' + error.message);
-    } finally {
-      this.loading = false;
-    }
-  }
-},
+    },
     async sendResetEmail() {
       if (this.resetEmail) {
         try {

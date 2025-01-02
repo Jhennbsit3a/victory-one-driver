@@ -1,20 +1,20 @@
 <template>
-  <v-app dark>
+  <v-app>
     <!-- App Bar -->
-    <v-app-bar v-if="showDrawer" app style="background-color: #333; color: white;">
-      <v-app-bar-nav-icon @click="drawer = !drawer" style="color: white;"></v-app-bar-nav-icon>
-      <v-toolbar-title>Panel</v-toolbar-title>
+    <v-app-bar v-if="showDrawer" app style="background-color: #333; color: black;" color="white">
+      <v-app-bar-nav-icon @click="drawer = !drawer" style="color: black;" color="black"></v-app-bar-nav-icon>
+      <v-toolbar-title>Driver</v-toolbar-title>
     </v-app-bar>
 
     <!-- Navigation Drawer -->
     <v-navigation-drawer v-if="showDrawer" v-model="drawer" :mini-variant="miniVariant" :clipped="clipped" fixed app
-      style="background-color: #333;">
+      style="background-color: #333;" color="white">
       <v-layout column fill-height>
         <!-- Navigation Items -->
         <v-list>
-          <v-list-item v-for="(item, i) in filteredItems" :key="i" :to="item.to" router exact style="color: white;">
+          <v-list-item v-for="(item, i) in filteredItems" :key="i" :to="item.to" router exact style="color: black;">
             <v-list-item-action>
-              <v-icon style="color: white;">{{ item.icon }}</v-icon>
+              <v-icon style="color: black;">{{ item.icon }}</v-icon>
             </v-list-item-action>
             <v-list-item-content>
               <v-list-item-title>{{ item.title }}</v-list-item-title>
@@ -61,30 +61,18 @@ export default {
       showDrawer: true,
       userRole: null, // Add a property to store the user role
       items: [
-        { icon: 'mdi-view-dashboard', title: 'Dashboard', to: '/admin/dashboard', roles: ['admin'] },
-        { icon: 'mdi-account', title: 'Account Management', to: '/admin/accounts', roles: ['admin', 'cashier'] },
-        { icon: 'mdi-cube', title: 'Product Management', to: '/admin/products', roles: ['admin', 'cashier'] },
-        { icon: 'mdi-order-bool-ascending', title: 'Order Management', to: '/admin/orders', roles: ['admin', 'cashier'] },
-        { icon: 'mdi-currency-php', title: 'Price Management', to: '/admin/price', roles: ['admin', 'cashier'] },
-        { icon: 'mdi-folder', title: 'Category Management', to: '/admin/category', roles: ['admin'] },
-        { icon: 'mdi-warehouse', title: 'Inventory Management', to: '/admin/inventory', roles: ['admin', 'cashier'] },
-        { icon: 'mdi-credit-card', title: 'Payment Methods', to: '/admin/payments', roles: ['admin'] },
-        { icon: 'mdi-qrcode', title: 'QR Code', to: '/admin/qrscanner', roles: ['admin', 'cashier'] },
-        { icon: 'mdi-card-account-details-outline', title: 'Driver Module', to: '/driver/ddmodule', roles: ['admin','driver'] },
-        { icon: 'mdi-truck-alert-outline', title: 'Dispatch Module', to: '/dispatch/dmodule', roles: ['admin', 'dispatch'] },
+        { icon: 'mdi-card-account-details-outline', title: 'Order', to: '/driver/pending_orders',},
+        { icon: 'mdi-card-account-details-outline', title: 'Shipped Orders', to: '/driver/shipped_orders', },
+        { icon: 'mdi-card-account-details-outline', title: 'Delivered Orders', to: '/driver/delivered_orders', },
+        { icon: 'mdi-card-account-details-outline', title: 'Completed Orders', to: '/driver/completed_orders', },
+        { icon: 'mdi-card-account-details-outline', title: 'Cancelled Orders', to: '/driver/cancelled_orders', },
       ],
       showDrawerOnRoutes: [
-        '/driver/ddmodule',
-        '/dispatch/dmodule',
-        '/admin/dashboard',
-        '/admin/accounts',
-        '/admin/products',
-        '/admin/price',
-        '/admin/category',
-        '/admin/inventory',
-        '/admin/orders',
-        '/admin/payments',
-        '/admin/qrscanner'
+        '/driver/pending_orders',
+        '/driver/shipped_orders',
+        '/driver/delivered_orders',
+        '/driver/completed_orders',
+        '/driver/cancelled_orders',
       ]
     };
   },
