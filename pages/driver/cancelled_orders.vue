@@ -52,15 +52,15 @@
                         </template>
 
                         <template v-slot:item.actions="{ item }">
-                            <v-btn @click="updateOrderStatus(item)" color="blue" style="color: white;">Update
-                                Status</v-btn>
+                            <!-- <v-btn @click="updateOrderStatus(item)" color="blue" style="color: white;">Update
+                                Status</v-btn> -->
                             <v-btn @click="viewOrderDetails(item)" color="green" style="color: white;">View
                                 Details</v-btn>
                         </template>
                     </v-data-table>
                 </v-col>
             </v-row>
-            <v-dialog v-model="dialog" max-width="500px">
+            <!-- <v-dialog v-model="dialog" max-width="500px">
                 <v-card>
                     <v-card-title class="headline">Update Order Status</v-card-title>
                     <v-card-text>
@@ -73,7 +73,7 @@
                         <v-btn text color="green" @click="saveStatusUpdate">Save</v-btn>
                     </v-card-actions>
                 </v-card>
-            </v-dialog>
+            </v-dialog> -->
 
             <v-dialog v-model="detailsDialog" max-width="600px">
                 <v-card>
@@ -178,7 +178,7 @@ export default {
             detailsDialog: false,
             selectedStatus: '',
             selectedOrderDetails: null,
-            statusOptions: ['Pending', 'Shipped', 'Delivered', 'Completed', 'Cancelled'],
+            // statusOptions: ['Pending', 'Shipped', 'Delivered', 'Completed', 'Cancelled'],
             selectedOrderId: null,
         };
     },
@@ -225,11 +225,11 @@ export default {
             };
             return colors[status] || 'grey';
         },
-        updateOrderStatus(order) {
-            this.selectedOrderId = order.id;
-            this.selectedStatus = order.status;
-            this.dialog = true;
-        },
+        // updateOrderStatus(order) {
+        //     this.selectedOrderId = order.id;
+        //     this.selectedStatus = order.status;
+        //     this.dialog = true;
+        // },
         async saveStatusUpdate() {
             try {
                 const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
