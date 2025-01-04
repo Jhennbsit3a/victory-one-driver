@@ -150,25 +150,19 @@
 
 <script>
 import { firestore } from '~/plugins/firebase';
-import { collection, getDocs, getDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default {
     data() {
         return {
-            orders: [],
-            shippedOrders: [],
-            deliveredOrders: [],
-            completedOrders: [],
             cancelledOrders: [],
             headers: [
                 { text: 'Order ID', value: 'id' },
                 { text: 'Products Ordered', value: 'cartItems' },
-                { text: 'User', value: 'userId' },
+                { text: 'User', value: 'userFullName' },
                 { text: 'Quantity', value: 'totalQuantity' },
                 { text: 'Total', value: 'totalAmount' },
                 { text: 'Status', value: 'status' },
-                { text: 'Payment Method', value: 'paymentMethod' },
-                { text: 'Estimated Delivery Date', value: 'estimatedDeliveryDate' },
                 { text: 'Created At', value: 'createdAt' },
                 { text: 'Actions', value: 'actions', sortable: false },
             ],
@@ -183,42 +177,28 @@ export default {
     async created() {
         try {
             const ordersSnapshot = await getDocs(collection(firestore, 'Orders'));
-            this.orders = [];
+            this.cancelledOrders = [];
 
-            // Fetch orders and their user details
             for (const docSnap of ordersSnapshot.docs) {
                 const orderData = docSnap.data();
-                const userRef = doc(firestore, 'Users', orderData.userId);
-                const userDoc = await getDoc(userRef);
-                const userData = userDoc.exists() ? userDoc.data() : null;
-                const userFullName = userData ? `${userData.firstName} ${userData.lastName}` : 'Unknown';
+                if (orderData.status === 'Cancelled') {
+                    const userRef = doc(firestore, 'Users', orderData.userId);
+                    const userDoc = await getDoc(userRef);
+                    const userFullName = userDoc.exists()
+                        ? `${userDoc.data().firstName} ${userDoc.data().lastName}`
+                        : 'Unknown';
 
-                const order = {
-                    id: docSnap.id,
-                    ...orderData,
-                    totalAmount: orderData.totalAmount || this.calculateTotalAmount(orderData.cartItems),
-                    status: orderData.status,
-                    userFullName, // Added userFullName to order
-                };
-                this.orders.push(order);
+                    this.cancelledOrders.push({
+                        id: docSnap.id,
+                        ...orderData,
+                        totalAmount: orderData.totalAmount || this.calculateTotalAmount(orderData.cartItems),
+                        userFullName,
+                    });
+                }
             }
-
-            // Filter orders to only include those with specific statuses
-            this.shippedOrders = this.orders.filter(order => order.status === 'Shipped');
-            this.deliveredOrders = this.orders.filter(order => order.status === 'Delivered');
-            this.completedOrders = this.orders.filter(order => order.status === 'Completed');
-            this.cancelledOrders = this.orders.filter(order => order.status === 'Cancelled');
         } catch (error) {
-            console.error('Error fetching orders: ', error);
+            console.error('Error fetching cancelled orders:', error);
         }
-    },
-    computed: {
-        pendingOrders() {
-            return this.orders.filter(order => order.status === 'Pending');
-        },
-        totalOrders() {
-            return this.orders.filter(order => order.status !== 'Cancelled').length;
-        },
     },
     methods: {
         formatDate(date) {
@@ -226,14 +206,14 @@ export default {
             return new Date(date.seconds * 1000).toLocaleDateString('en-US', options);
         },
         getStatusColor(status) {
-            switch (status) {
-                case 'Pending': return 'orange';
-                case 'Shipped': return 'blue';
-                case 'Delivered': return 'green';
-                case 'Completed': return 'teal';
-                case 'Cancelled': return 'red';
-                default: return 'grey';
-            }
+            const colors = {
+                Pending: 'orange',
+                Shipped: 'blue',
+                Delivered: 'green',
+                Completed: 'teal',
+                Cancelled: 'red',
+            };
+            return colors[status] || 'grey';
         },
         updateOrderStatus(order) {
             this.selectedOrderId = order.id;
@@ -243,57 +223,42 @@ export default {
         async saveStatusUpdate() {
             try {
                 const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
-                await updateDoc(orderRef, {
-                    status: this.selectedStatus,
-                });
-
+                await updateDoc(orderRef, { status: this.selectedStatus });
                 this.dialog = false;
 
-                const updatedOrder = this.orders.find(order => order.id === this.selectedOrderId);
+                const updatedOrder = this.cancelledOrders.find(order => order.id === this.selectedOrderId);
                 if (updatedOrder) {
                     updatedOrder.status = this.selectedStatus;
                 }
-
-                this.shippedOrders = this.orders.filter(order => order.status === 'Shipped');
-                this.deliveredOrders = this.orders.filter(order => order.status === 'Delivered');
-                this.completedOrders = this.orders.filter(order => order.status === 'Completed');
-                this.cancelledOrders = this.orders.filter(order => order.status === 'Cancelled');
             } catch (error) {
-                console.error('Error updating order status: ', error);
+                console.error('Error updating order status:', error);
             }
         },
         calculateTotalQuantity(cartItems) {
-            return cartItems.reduce((total, product) => {
-                const quantity = product.Quantity || 0;
-                return total + quantity;
-            }, 0);
+            return cartItems.reduce((total, product) => total + (product.Quantity || 0), 0);
         },
         calculateTotalAmount(cartItems) {
-            return cartItems.reduce((total, product) => {
-                const price = product.price || 0;
-                const quantity = product.Quantity || 0;
-                return total + (price * quantity);
-            }, 0);
+            return cartItems.reduce((total, product) => total + (product.price || 0) * (product.Quantity || 0), 0);
         },
         viewOrderDetails(order) {
             this.selectedOrderDetails = {
-                userId: order.userId,
+                userId: order.userFullName,
                 productName: order.cartItems.map(item => item.productName).join(', '),
                 Quantity: this.calculateTotalQuantity(order.cartItems),
-                subtotal: order.cartItems.reduce((sum, item) => sum + (item.price * item.Quantity), 0),
+                subtotal: this.calculateTotalAmount(order.cartItems),
                 tax: order.cartItems.reduce((sum, item) => sum + (item.tax || 0), 0),
                 total: order.totalAmount,
                 paymentMethod: order.paymentMethod,
                 estimatedDeliveryDate: order.estimatedDeliveryDate,
-                status: order.status,
-                // Include the new deliveryAddress field
                 deliveryAddress: order.deliveryAddress || 'Not Available',
+                status: order.status,
             };
             this.detailsDialog = true;
         },
     },
 };
 </script>
+
 
 <style scoped>
 .v-data-table {
