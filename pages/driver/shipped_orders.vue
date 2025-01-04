@@ -4,7 +4,14 @@
             <!-- Shipped Orders Table -->
             <v-row>
                 <v-col cols="12">
-                    <v-data-table :headers="headers" :items="shippedOrders" item-key="id" class="elevation-1">
+                <!-- Skeleton Loader when data is being fetched -->
+                    <v-skeleton-loader
+                        v-if="loading"
+                        type="table"
+                        :columns="headers.length"
+                        class="elevation-1"
+                    />
+                    <v-data-table v-else :headers="headers" :items="shippedOrders" item-key="id" class="elevation-1">
                         <template v-slot:top>
                             <v-row>
                                 <v-col cols="12">
@@ -156,6 +163,7 @@ import { collection, getDocs, doc, getDoc, updateDoc,where,query } from 'firebas
 export default {
     data() {
         return {
+            loading: true,
             shippedOrders: [],
             headers: [
                 { text: 'Order ID', value: 'id' },
@@ -204,7 +212,9 @@ export default {
                         };
                     })
                 );
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 console.error('Error fetching shipped orders: ', error);
             }
         },

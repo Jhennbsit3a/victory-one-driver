@@ -1,10 +1,15 @@
 <template>
     <v-app>
         <v-container>
-
             <v-row>
                 <v-col cols="12" md="4" class="mb-4">
-                    <v-card class="elevation-2">
+                        <!-- Skeleton Loader when data is being fetched -->
+                        <v-skeleton-loader
+                            v-if="loading"
+                            type="card"
+                            class="elevation-1"
+                        />
+                    <v-card v-else class="elevation-2">
                         <v-card-title class="headline text-center">
                             <v-icon class="mr-2">mdi-cube</v-icon>
                             Total Orders
@@ -17,7 +22,14 @@
             <!-- Orders Table -->
             <v-row>
                 <v-col cols="12">
-                    <v-data-table :headers="headers" :items="pendingOrders" item-key="id" class="elevation-1">
+                    <!-- Skeleton Loader when data is being fetched -->
+                    <v-skeleton-loader
+                        v-if="loading"
+                        type="table"
+                        :columns="headers.length"
+                        class="elevation-1"
+                    />
+                    <v-data-table v-else :headers="headers" :items="pendingOrders" item-key="id" class="elevation-1">
                         <template v-slot:top>
                             <v-row>
                                 <v-col cols="12">
@@ -170,6 +182,7 @@ import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore'
 export default {
     data() {
         return {
+            loading: true,
             orders: [],
             headers: [
                 { text: 'Order ID', value: 'id' },
@@ -209,7 +222,9 @@ export default {
                     };
                 })
             );
+            this.loading = false;
         } catch (error) {
+            this.loading = false;
             console.error('Error fetching orders: ', error);
         }
     },

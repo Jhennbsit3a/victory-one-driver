@@ -1,152 +1,163 @@
 <template>
-    <v-app>
-        <v-container>
-            <!-- Delivered Orders Table -->
-            <v-row>
+  <v-app>
+    <v-container>
+      <!-- Delivered Orders Table -->
+      <v-row>
+        <v-col cols="12">
+          <!-- Skeleton Loader when data is being fetched -->
+          <v-skeleton-loader
+            v-if="loading"
+            type="table"
+            :columns="headers.length"
+            class="elevation-1"
+          />
+          <!-- Actual Table -->
+          <v-data-table
+            v-else
+            :headers="headers"
+            :items="deliveredOrders"
+            item-key="id"
+            class="elevation-1"
+          >
+            <template v-slot:top>
+              <v-row>
                 <v-col cols="12">
-                    <v-data-table :headers="headers" :items="deliveredOrders" item-key="id" class="elevation-1">
-                        <template v-slot:top>
-                            <v-row>
-                                <v-col cols="12">
-                                    <v-card-title class="headline text-center">
-                                        <v-icon class="mr-2">mdi-cube</v-icon>
-                                        Delivered Orders
-                                    </v-card-title>
-                                </v-col>
-                            </v-row>
-                        </template>
-
-                        <template v-slot:item.status="{ item }">
-                            <v-chip :color="getStatusColor(item.status)" outlined>
-                                {{ item.status }}
-                            </v-chip>
-                        </template>
-
-                        <template v-slot:item.createdAt="{ item }">
-                            <span>{{ formatDate(item.createdAt) }}</span>
-                        </template>
-
-                        <template v-slot:item.cartItems="{ item }">
-                            <div v-for="(product, index) in item.cartItems" :key="index">
-                                <span>{{ product.productName }}</span>
-                            </div>
-                        </template>
-
-                        <template v-slot:item.totalQuantity="{ item }">
-                            <span>{{ calculateTotalQuantity(item.cartItems) }}</span>
-                        </template>
-
-                        <template v-slot:item.totalAmount="{ item }">
-                            <span>₱{{ item.totalAmount || 'Not Available' }}</span>
-                        </template>
-
-                        <template v-slot:item.userId="{ item }">
-                            <span>{{ item.userFullName }}</span>
-                        </template>
-
-                        <template v-slot:item.actions="{ item }">
-                            <v-btn @click="updateOrderStatus(item)" color="blue" style="color: white;">Update
-                                Status</v-btn>
-                            <v-btn @click="viewOrderDetails(item)" color="green" style="color: white;">View
-                                Details</v-btn>
-                        </template>
-                    </v-data-table>
+                  <v-card-title class="headline text-center">
+                    <v-icon class="mr-2">mdi-cube</v-icon>
+                    Delivered Orders
+                  </v-card-title>
                 </v-col>
-            </v-row>
+              </v-row>
+            </template>
 
-            <v-dialog v-model="dialog" max-width="500px">
-                <v-card>
-                    <v-card-title class="headline">Update Order Status</v-card-title>
-                    <v-card-text>
-                        <v-select v-model="selectedStatus" :items="statusOptions" label="Select New Status" dense
-                            outlined></v-select>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn text color="red" @click="dialog = false">Cancel</v-btn>
-                        <v-btn text color="green" @click="saveStatusUpdate">Save</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
+            <template v-slot:item.status="{ item }">
+              <v-chip :color="getStatusColor(item.status)" outlined>
+                {{ item.status }}
+              </v-chip>
+            </template>
 
-            <v-dialog v-model="detailsDialog" max-width="600px">
-                <v-card>
-                    <v-card-title class="headline">Order Details</v-card-title>
-                    <v-card-text>
-                        <v-list dense>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>User:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.userId }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Products:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.productName }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Quantity:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.Quantity }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Subtotal:</v-list-item-title>
-                                    <v-list-item-subtitle>₱{{ selectedOrderDetails?.subtotal }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Tax:</v-list-item-title>
-                                    <v-list-item-subtitle>₱{{ selectedOrderDetails?.tax }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Total Amount:</v-list-item-title>
-                                    <v-list-item-subtitle>₱{{ selectedOrderDetails?.total }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Payment Method:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.paymentMethod
-                                        }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Estimated Delivery Date:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.estimatedDeliveryDate
-                                        }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Delivery Address:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.deliveryAddress
-                                        }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>Status:</v-list-item-title>
-                                    <v-list-item-subtitle>{{ selectedOrderDetails?.status }}</v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-                        </v-list>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn text color="red" @click="detailsDialog = false">Close</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-        </v-container>
-    </v-app>
+            <template v-slot:item.createdAt="{ item }">
+              <span>{{ formatDate(item.createdAt) }}</span>
+            </template>
+
+            <template v-slot:item.cartItems="{ item }">
+              <div v-for="(product, index) in item.cartItems" :key="index">
+                <span>{{ product.productName }}</span>
+              </div>
+            </template>
+
+            <template v-slot:item.totalQuantity="{ item }">
+              <span>{{ calculateTotalQuantity(item.cartItems) }}</span>
+            </template>
+
+            <template v-slot:item.totalAmount="{ item }">
+              <span>₱{{ item.totalAmount || 'Not Available' }}</span>
+            </template>
+
+            <template v-slot:item.userId="{ item }">
+              <span>{{ item.userFullName }}</span>
+            </template>
+
+            <template v-slot:item.actions="{ item }">
+              <v-btn @click="updateOrderStatus(item)" color="blue" style="color: white;">Update
+                Status</v-btn>
+              <v-btn @click="viewOrderDetails(item)" color="green" style="color: white;">View
+                Details</v-btn>
+            </template>
+          </v-data-table>
+        </v-col>
+      </v-row>
+
+      <v-dialog v-model="dialog" max-width="500px">
+        <v-card>
+          <v-card-title class="headline">Update Order Status</v-card-title>
+          <v-card-text>
+            <v-select v-model="selectedStatus" :items="statusOptions" label="Select New Status" dense
+              outlined></v-select>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text color="red" @click="dialog = false">Cancel</v-btn>
+            <v-btn text color="green" @click="saveStatusUpdate">Save</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog v-model="detailsDialog" max-width="600px">
+        <v-card>
+          <v-card-title class="headline">Order Details</v-card-title>
+          <v-card-text>
+            <v-list dense>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>User:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.userId }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Products:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.productName }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Quantity:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.Quantity }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Subtotal:</v-list-item-title>
+                  <v-list-item-subtitle>₱{{ selectedOrderDetails?.subtotal }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Tax:</v-list-item-title>
+                  <v-list-item-subtitle>₱{{ selectedOrderDetails?.tax }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Total Amount:</v-list-item-title>
+                  <v-list-item-subtitle>₱{{ selectedOrderDetails?.total }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Payment Method:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.paymentMethod }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Estimated Delivery Date:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.estimatedDeliveryDate }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Delivery Address:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.deliveryAddress }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Status:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrderDetails?.status }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text color="red" @click="detailsDialog = false">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-container>
+  </v-app>
 </template>
 
 <script>
@@ -157,6 +168,7 @@ export default {
   data() {
     return {
       deliveredOrders: [],
+      loading: true,  // Add loading state
       headers: [
         { text: 'Order ID', value: 'id' },
         { text: 'Products Ordered', value: 'cartItems' },
@@ -188,8 +200,11 @@ export default {
           };
         })
         .filter(order => order.status === 'Delivered');
+
+      this.loading = false; // Set loading to false once data is fetched
     } catch (error) {
       console.error('Error fetching orders: ', error);
+      this.loading = false;  // Stop loading in case of error
     }
   },
   methods: {
@@ -255,9 +270,8 @@ export default {
 };
 </script>
 
-
 <style scoped>
 .v-data-table {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 </style>
