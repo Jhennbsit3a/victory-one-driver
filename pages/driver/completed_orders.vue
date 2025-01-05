@@ -228,22 +228,22 @@ export default {
         console.error('Error fetching completed orders:', error);
       }
     },
-    async saveStatusUpdate() {
-    try {
-        const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
-        await updateDoc(orderRef, { status: this.selectedStatus });
+    // async saveStatusUpdate() {
+    // try {
+    //     const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
+    //     await updateDoc(orderRef, { status: this.selectedStatus });
 
-        this.dialog = false;
+    //     this.dialog = false;
 
-        const updatedOrder = this.completedOrders.find(order => order.id === this.selectedOrderId);
-        if (updatedOrder) {
-        updatedOrder.status = this.selectedStatus;
-        }
-        this.fetchCompletedOrders();
-    } catch (error) {
-        console.error('Error updating order status: ', error);
-    }
-    },
+    //     const updatedOrder = this.completedOrders.find(order => order.id === this.selectedOrderId);
+    //     if (updatedOrder) {
+    //     updatedOrder.status = this.selectedStatus;
+    //     }
+    //     this.fetchCompletedOrders();
+    // } catch (error) {
+    //     console.error('Error updating order status: ', error);
+    // }
+    // },
     formatDate(date) {
       const options = { year: 'numeric', month: 'short', day: 'numeric' };
       return new Date(date.seconds * 1000).toLocaleDateString('en-US', options);
@@ -257,11 +257,11 @@ export default {
         0
       );
     },
-    updateOrderStatus(order) {
-      this.selectedOrderId = order.id;
-      this.selectedStatus = order.status;
-      this.dialog = true;
-    },
+    // updateOrderStatus(order) {
+    //   this.selectedOrderId = order.id;
+    //   this.selectedStatus = order.status;
+    //   this.dialog = true;
+    // },
     viewOrderDetails(order) {
       this.selectedOrderDetails = {
         userId: order.userFullName,

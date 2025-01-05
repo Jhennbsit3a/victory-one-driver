@@ -232,12 +232,13 @@ export default {
         const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
         await updateDoc(orderRef, { status: this.selectedStatus });
 
-        this.dialog = false;
 
         const updatedOrder = this.deliveredOrders.find(order => order.id === this.selectedOrderId);
         if (updatedOrder) {
           updatedOrder.status = this.selectedStatus;
         }
+        this.dialog = false;
+        this.$router.go()
       } catch (error) {
         console.error('Error updating order status: ', error);
       }

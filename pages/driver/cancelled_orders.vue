@@ -230,20 +230,20 @@ export default {
         //     this.selectedStatus = order.status;
         //     this.dialog = true;
         // },
-        async saveStatusUpdate() {
-            try {
-                const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
-                await updateDoc(orderRef, { status: this.selectedStatus });
-                this.dialog = false;
+        // async saveStatusUpdate() {
+        //     try {
+        //         const orderRef = doc(firestore, 'Orders', this.selectedOrderId);
+        //         await updateDoc(orderRef, { status: this.selectedStatus });
+        //         this.dialog = false;
 
-                const updatedOrder = this.cancelledOrders.find(order => order.id === this.selectedOrderId);
-                if (updatedOrder) {
-                    updatedOrder.status = this.selectedStatus;
-                }
-            } catch (error) {
-                console.error('Error updating order status:', error);
-            }
-        },
+        //         const updatedOrder = this.cancelledOrders.find(order => order.id === this.selectedOrderId);
+        //         if (updatedOrder) {
+        //             updatedOrder.status = this.selectedStatus;
+        //         }
+        //     } catch (error) {
+        //         console.error('Error updating order status:', error);
+        //     }
+        // },
         calculateTotalQuantity(cartItems) {
             return cartItems.reduce((total, product) => total + (product.Quantity || 0), 0);
         },
