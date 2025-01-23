@@ -70,8 +70,8 @@
                         </template>
 
                         <template v-slot:item.actions="{ item }">
-                            <v-btn @click="updateOrderStatus(item)" color="blue" style="color: white;">Update
-                                Status</v-btn>
+                            <!-- <v-btn @click="updateOrderStatus(item)" color="blue" style="color: white;">Update
+                                Status</v-btn> -->
                             <v-btn @click="viewOrderDetails(item)" color="green" style="color: white;">View
                                 Details</v-btn>
                         </template>
