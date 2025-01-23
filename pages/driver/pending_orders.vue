@@ -198,7 +198,7 @@ export default {
             detailsDialog: false,
             selectedStatus: '',
             selectedOrderDetails: null,
-            statusOptions: ['Pending', 'Shipped', 'Delivered', 'Completed', 'Cancelled'],
+            statusOptions: ['Shipped', 'Cancelled'],
             selectedOrderId: null,
         };
     },

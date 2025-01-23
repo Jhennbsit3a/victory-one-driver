@@ -179,7 +179,7 @@ export default {
             detailsDialog: false,
             selectedStatus: '',
             selectedOrderDetails: null,
-            statusOptions: ['Shipped', 'Delivered', 'Completed', 'Cancelled'],
+            statusOptions: ['Delivered', 'Cancelled'],
             selectedOrderId: null,
         };
     },

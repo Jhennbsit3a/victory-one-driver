@@ -183,7 +183,7 @@ export default {
       detailsDialog: false,
       selectedStatus: '',
       selectedOrderDetails: null,
-      statusOptions: ['Delivered', 'Completed'],
+      statusOptions: ['Completed'],
       selectedOrderId: null,
     };
   },
