@@ -61,7 +61,7 @@ export default {
       showDrawer: true,
       userRole: null, // Add a property to store the user role
       items: [
-        { icon: 'mdi-card-account-details-outline', title: 'Pending Order', to: '/driver/pending_orders',},
+        // { icon: 'mdi-card-account-details-outline', title: 'Pending Order', to: '/driver/pending_orders',},
         { icon: 'mdi-card-account-details-outline', title: 'Shipped Orders', to: '/driver/shipped_orders', },
         { icon: 'mdi-card-account-details-outline', title: 'Delivered Orders', to: '/driver/delivered_orders', },
         { icon: 'mdi-card-account-details-outline', title: 'Completed Orders', to: '/driver/completed_orders', },

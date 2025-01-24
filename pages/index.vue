@@ -116,7 +116,7 @@ export default {
             const userRole = userData.role;
             if (["admin", "owner", "driver"].includes(userRole)) {
               // console.log(`Role "${userRole}" is validated. Access granted.`);
-              this.$router.push("/driver/pending_orders");
+              this.$router.push("/driver/shipped_orders");
             } else {
               // console.log(`Role "${userRole}" is not authorized. Redirecting to no-access page.`);
               this.$router.push("/no-access");

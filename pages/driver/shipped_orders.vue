@@ -1,6 +1,23 @@
 <template>
     <v-app>
         <v-container>
+            <v-row>
+                <v-col cols="12" md="4" class="mb-4">
+                        <!-- Skeleton Loader when data is being fetched -->
+                        <v-skeleton-loader
+                            v-if="loading"
+                            type="card"
+                            class="elevation-1"
+                        />
+                    <v-card v-else class="elevation-2">
+                        <v-card-title class="headline text-center">
+                            <v-icon class="mr-2">mdi-cube</v-icon>
+                            Total Orders
+                        </v-card-title>
+                        <v-card-text class="text-h2">{{ totalOrders }}</v-card-text>
+                    </v-card>
+            </v-col>
+            </v-row>
             <!-- Shipped Orders Table -->
             <v-row>
                 <v-col cols="12">
@@ -165,6 +182,7 @@ export default {
         return {
             loading: true,
             shippedOrders: [],
+            orders: [],
             headers: [
                 { text: 'Order ID', value: 'id' },
                 { text: 'Products Ordered', value: 'cartItems' },
@@ -183,10 +201,42 @@ export default {
             selectedOrderId: null,
         };
     },
+    computed:{
+        totalOrders() {
+            return this.orders.length;
+        },
+    },
     async created() {
         await this.fetchShippedOrders();
+        await this.fetchTotalOrders();
     },
     methods: {
+        async fetchTotalOrders(){
+            try {
+                const ordersSnapshot = await getDocs(collection(firestore, 'Orders'));
+                this.orders = await Promise.all(
+                    ordersSnapshot.docs.map(async (docSnap) => {
+                        const orderData = docSnap.data();
+                        const userRef = doc(firestore, 'Users', orderData.userId);
+                        const userDoc = await getDoc(userRef);
+                        const userFullName = userDoc.exists() 
+                            ? `${userDoc.data().firstName} ${userDoc.data().lastName}` 
+                            : 'Unknown';
+
+                        return {
+                            id: docSnap.id,
+                            ...orderData,
+                            userFullName,
+                            totalAmount: orderData.totalAmount || this.calculateTotalAmount(orderData.cartItems),
+                        };
+                    })
+                );
+                this.loading = false;
+            } catch (error) {
+                this.loading = false;
+                console.error('Error fetching orders: ', error);
+            }
+        },
         async fetchShippedOrders() {
             try {
                 // Fetch only orders with status "Shipped"
